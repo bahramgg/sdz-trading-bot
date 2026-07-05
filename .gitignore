@@ -23,3 +23,7 @@ _fetch_real.py
 _fetch.log
 _fetch_deep.py
 _fetch_deep.log
+
+# scratch helpers/logs at repo root (leading underscore)
+/_*.py
+/_*.log
