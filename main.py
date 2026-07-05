@@ -65,6 +65,15 @@ def cmd_fetch(args) -> int:
 
 def _fetch_rows(market: str, symbol: str, tf: str, since: int, until: int) -> List[list]:
     if market == "crypto":
+        # Binance public data has the deepest history (back to listing); ccxt
+        # (OKX/Bybit) is the live-scan source. Fall back to ccxt on error.
+        try:
+            from data import binance_vision
+            rows = binance_vision.fetch_ohlcv(symbol, tf, since, until)
+            if rows:
+                return rows
+        except Exception:
+            pass
         from data import ccxt_fetch
         return ccxt_fetch.fetch_ohlcv(symbol, tf, since, until)
     else:
