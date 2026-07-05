@@ -153,13 +153,15 @@ def cmd_calibrate(args) -> int:
 
     datasets = []
     for market in markets:
+        curve_tf = _curve_tf(market)
         for symbol in wl[market]["symbols"]:
+            curve = store.load_candles(symbol, curve_tf, start, end)
             for tf in wl[market]["timeframes"]:
                 candles = store.load_candles(symbol, tf, start, end)
                 if len(candles) < params.atr_period + 5:
                     continue
-                datasets.append((candles, SimConfig(market, symbol, tf,
-                                                    tf_is_curve=(tf == _curve_tf(market)))))
+                cfg = SimConfig(market, symbol, tf, tf_is_curve=(tf == curve_tf))
+                datasets.append((candles, cfg, curve if tf != curve_tf else None))
     store.close()
 
     results = sweep(datasets, params, min_trades=args.min_trades)

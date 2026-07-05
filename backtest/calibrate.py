@@ -31,23 +31,25 @@ class SweepResult:
 
 
 def sweep(
-    datasets: Sequence[tuple[Sequence, SimConfig]],
+    datasets: Sequence[tuple],
     base: Params,
     grid: Dict[str, list] = GRID,
     min_trades: int = 200,
 ) -> List[SweepResult]:
-    """Run the full grid. ``datasets`` = list of (candles, SimConfig) over the
-    TRAIN window. Returns results sorted by expectancy (desc), filtered to those
-    meeting ``min_trades`` (master plan: >=200 trades/bucket)."""
+    """Run the full grid. ``datasets`` = list of (candles, SimConfig, curve)
+    over the TRAIN window (curve may be None for curve-TF datasets). Uses the
+    SAME scoring pipeline (incl. HTF context) as the final OOS backtest so the
+    chosen params transfer faithfully. Returns results sorted by expectancy
+    (desc), filtered to those meeting ``min_trades`` (plan: >=200/bucket)."""
     keys = list(grid.keys())
     results: List[SweepResult] = []
     for combo in itertools.product(*(grid[k] for k in keys)):
         overrides = dict(zip(keys, combo))
         params = base.override(**overrides)
         all_trades: List[Trade] = []
-        for candles, cfg in datasets:
+        for candles, cfg, curve in datasets:
             trades, _ = simulate_symbol(candles, cfg, params,
-                                        curve_candles=None)
+                                        curve_candles=curve)
             all_trades.extend(trades)
         m = compute(all_trades)
         results.append(SweepResult(params=overrides, metrics=m))
