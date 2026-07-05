@@ -17,3 +17,7 @@ runs/
 .DS_Store
 .idea/
 .vscode/
+
+# local scratch (real-data fetch helpers, not part of the package)
+_fetch_real.py
+_fetch.log

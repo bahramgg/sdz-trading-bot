@@ -18,9 +18,14 @@ _TF_MS = {
 
 
 def _exchange(exchange_id: str):
+    import os
     import ccxt  # imported lazily so the package imports without ccxt present
     klass = getattr(ccxt, exchange_id)
     ex = klass({"enableRateLimit": True})
+    # Honor an outbound HTTPS proxy (ccxt does not read HTTPS_PROXY on its own).
+    proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
+    if proxy:
+        ex.httpsProxy = proxy
     ex.load_markets()
     return ex
 

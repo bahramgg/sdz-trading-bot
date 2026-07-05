@@ -1,7 +1,7 @@
 # Symbols to fetch / backtest / scan. Extend freely.
 crypto:
-  exchange: "bybit"        # ccxt id; fallback okx (both serve public OHLCV)
-  fallback_exchange: "okx"
+  exchange: "okx"          # ccxt id serving public OHLCV; fallback bybit
+  fallback_exchange: "bybit"  # note: bybit may be geo/CDN-blocked on some networks
   symbols:
     - "BTC/USDT"
     - "ETH/USDT"
