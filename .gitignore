@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Data & run artifacts (regenerable)
+data/*.db
+data/duka_cache/
+runs/
+
+# Secrets
+.env
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

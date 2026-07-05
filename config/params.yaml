@@ -1,0 +1,50 @@
+# SDZ-Sentinel — mechanical rule parameters
+# All named constants from the master plan §2. Overridable per calibration sweep (P3).
+
+# --- Timeframe pairing (HTF curve -> LTF entry), master plan §1.2 ---
+tf_pairs:
+  crypto:
+    curve: "1d"
+    entry: ["4h", "1h"]
+  forex:
+    curve: "4h"
+    entry: ["1h", "15m"]
+
+# --- 2.1 Candle classification ---
+atr_period: 14
+erc_atr_mult: 1.3        # ERC: range >= ERC_ATR_MULT * atr
+erc_body_min: 0.55       # ERC: body/range >= ERC_BODY_MIN
+base_body_max: 0.45      # basing: body/range <= BASE_BODY_MAX ...
+base_atr_max: 0.8        # ... OR range <= BASE_ATR_MAX * atr
+
+# --- 2.2 Base / pattern detection ---
+max_base_candles: 5
+
+# --- 2.3 Zone boundaries ---
+zone_max_atr: 2.0        # discard if height > ZONE_MAX_ATR * atr
+proximal_mode: "body"    # body | wick
+
+# --- 2.4 Zone lifecycle ---
+zone_max_age_bars:
+  default: 500           # entry TFs
+  curve: null            # no expiry on curve TF (e.g. 1D)
+
+# --- 2.5 Odds Enhancer scoring ---
+min_score: 6             # trade filter: only zones with score >= MIN_SCORE trade
+ema_period: 50           # HTF trend EMA for alignment enhancer
+
+# --- 2.6 Entry / Stop / Target ---
+stop_buffer_atr: 0.1     # stop beyond distal buffer
+tp_mode: "fixed_3R"      # fixed_3R | opposing_zone | hybrid
+tp_hybrid_floor_r: 2.0   # hybrid floor
+
+# --- 4. Live scanner alert thresholds ---
+alert_min_score: 7
+approach_atr: 0.5        # alert when distance to proximal <= APPROACH_ATR * atr
+
+# --- 3. Validation protocol (dates are sacred; OOS evaluated once at P4) ---
+validation:
+  train_start: "2019-01-01"
+  train_end: "2023-12-31"
+  test_start: "2024-01-01"
+  test_end: "2026-06-30"

@@ -1,0 +1,18 @@
+# Core engine + backtester
+numpy
+pandas
+pyyaml
+
+# Reporting (equity curve PNG is optional; report.md degrades gracefully)
+matplotlib
+
+# Data sources
+ccxt              # crypto OHLCV (Bybit / OKX public)
+yfinance          # forex fallback + crypto backup
+duka              # Dukascopy forex history (optional, deep history)
+
+# Live scanner
+aiohttp           # Telegram Bot API calls
+
+# Dev
+pytest

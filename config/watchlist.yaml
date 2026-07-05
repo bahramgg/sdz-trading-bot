@@ -1,0 +1,27 @@
+# Symbols to fetch / backtest / scan. Extend freely.
+crypto:
+  exchange: "bybit"        # ccxt id; fallback okx (both serve public OHLCV)
+  fallback_exchange: "okx"
+  symbols:
+    - "BTC/USDT"
+    - "ETH/USDT"
+    - "SOL/USDT"
+    - "BNB/USDT"
+    - "XRP/USDT"
+  timeframes: ["1d", "4h", "1h"]
+
+forex:
+  symbols:
+    - "EURUSD"
+    - "GBPUSD"
+    - "USDJPY"
+    - "AUDUSD"
+    - "XAUUSD"
+  timeframes: ["4h", "1h", "15m"]
+  # yfinance ticker mapping (fallback source)
+  yf_map:
+    EURUSD: "EURUSD=X"
+    GBPUSD: "GBPUSD=X"
+    USDJPY: "USDJPY=X"
+    AUDUSD: "AUDUSD=X"
+    XAUUSD: "XAUUSD=X"

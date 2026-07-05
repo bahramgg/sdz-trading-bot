@@ -1,0 +1,21 @@
+# systemd unit for the live scanner (master plan §4). Deploy on VPS:
+#   sudo cp deploy/sdz-sentinel.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now sdz-sentinel
+#   journalctl -u sdz-sentinel -f
+[Unit]
+Description=SDZ-Sentinel live S&D scanner + Telegram alerts
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/sdz-sentinel
+EnvironmentFile=/opt/sdz-sentinel/.env
+ExecStart=/opt/sdz-sentinel/.venv/bin/python main.py scan --market crypto
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
