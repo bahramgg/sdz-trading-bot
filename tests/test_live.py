@@ -23,13 +23,23 @@ def test_alert_format_matches_spec_shape():
     assert "3.0R" in msg
 
 
-def test_scanner_alerts_once_per_zone():
+def test_warmup_suppresses_backlog():
+    # Zone confirmed mid-history, price now far away: a cold start must NOT dump
+    # the historical zone as a "new" alert.
+    sc = SymbolScanner("BTC/USDT", "1h", "crypto", P.override(alert_min_score=6))
+    out = sc.on_new_candles(synthetic.demand_dbr())
+    assert not any(a.startswith("[SDZ] BTCUSDT") for a in out)
+
+
+def test_new_zone_alerts_once():
     cs = synthetic.demand_dbr()
     sc = SymbolScanner("BTC/USDT", "1h", "crypto", P.override(alert_min_score=6))
-    first = sc.on_new_candles(cs)
-    second = sc.on_new_candles(cs)          # same data -> no new alerts
-    assert len(first) == 1
-    assert second == []
+    assert sc.on_new_candles(cs[:21]) == []          # warmup, before confirm
+    a = sc.on_new_candles(cs[:22])                    # confirm bar -> one new-zone alert
+    assert len([x for x in a if x.startswith("[SDZ] BTCUSDT")]) == 1
+    assert len(sc.paper) == 1
+    b = sc.on_new_candles(cs[:23])                    # next bar -> no repeat new-zone alert
+    assert not any(x.startswith("[SDZ] BTCUSDT") for x in b)
 
 
 def test_paper_trade_resolves_win():

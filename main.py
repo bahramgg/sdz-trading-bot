@@ -185,34 +185,49 @@ def cmd_calibrate(args) -> int:
 # scan (live)
 # --------------------------------------------------------------------------- #
 def cmd_scan(args) -> int:
-    from live.scanner import SymbolScanner, scan_loop
-    from data import ccxt_fetch
+    from engine.candles import Candle
+    from live.scanner import SymbolScanner, scan_loop, scan_once
 
     params = Params.load()
     wl = watchlist()
     market = args.market or "crypto"
+    curve_tf = _curve_tf(market)
     scanners = []
     for symbol in wl[market]["symbols"]:
         for tf in wl[market]["timeframes"]:
-            if tf == _curve_tf(market):
-                continue  # scan entry TFs only
-            scanners.append(SymbolScanner(symbol, tf, market, params))
+            if tf == curve_tf:
+                continue  # scan entry TFs only; curve TF feeds HTF context
+            scanners.append(SymbolScanner(symbol, tf, market, params, curve_tf=curve_tf))
 
-    # Wire the live data source to the scan loop. ccxt fetch of recent closed
-    # candles per (symbol, tf); returns Candle objects for on_new_candles().
+    def _rows(symbol, tf):
+        if market == "crypto":
+            from data import ccxt_fetch
+            since = _now_ms() - 1500 * ccxt_fetch._TF_MS[tf]
+            return ccxt_fetch.fetch_ohlcv(symbol, tf, since)
+        else:
+            from data import duka_candles
+            since = _now_ms() - 1500 * duka_candles._AGG.get(tf, 1) * 3_600_000
+            return duka_candles.fetch_ohlcv(symbol, tf, since)
+
     def fetch(symbol, tf):
-        from data import ccxt_fetch
-        from engine.candles import Candle
-        since = _now_ms() - 1500 * ccxt_fetch._TF_MS[tf]
-        rows = ccxt_fetch.fetch_ohlcv(symbol, tf, since)
         return [Candle(r[0], r[1], r[2], r[3], r[4], r[5] if len(r) > 5 else 0.0)
-                for r in rows]
+                for r in _rows(symbol, tf)]
+
+    def curve_fetch(symbol):
+        return fetch(symbol, curve_tf)
 
     print(f"Scanning {len(scanners)} (symbol,tf) streams for {market}. "
-          f"Alert min score={params.alert_min_score}. Ctrl-C to stop.")
+          f"Alert min score={params.alert_min_score}."
+          + (" One-shot." if args.once else " Ctrl-C to stop."))
     try:
-        asyncio.run(scan_loop(scanners, poll_seconds=args.poll,
-                              fetch=fetch, send=not args.dry_run))
+        if args.once:
+            emitted = asyncio.run(scan_once(scanners, fetch, curve_fetch,
+                                            send=not args.dry_run))
+            print(f"\n{len(emitted)} alert(s) this pass"
+                  " (first pass warms up; run the loop for live alerts).")
+        else:
+            asyncio.run(scan_loop(scanners, poll_seconds=args.poll, fetch=fetch,
+                                  curve_fetch=curve_fetch, send=not args.dry_run))
     except KeyboardInterrupt:
         print("stopped.")
     return 0
@@ -246,6 +261,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--market", choices=["crypto", "forex"])
     s.add_argument("--poll", type=int, default=60)
     s.add_argument("--dry-run", action="store_true", help="print alerts, don't send")
+    s.add_argument("--once", action="store_true", help="single pass then exit (cron/testing)")
     s.set_defaults(func=cmd_scan)
     return p
 

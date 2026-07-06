@@ -79,7 +79,7 @@ trade is identical.
 | P2 | Backtester + cost model | deterministic; ambiguity rule verified; report | ✅ |
 | P3 | Calibration sweep on TRAIN | grid; expectancy-ranked | ✅ crypto (TRAIN +0.396R) |
 | P4 | **OOS GO/NO-GO** | exp ≥ +0.15R **and** PF ≥ 1.25 **and** ≥100 trades | crypto ❌ NO-GO · **forex ✅ GO** |
-| P5 | Live scanner + 30d forward paper | forward within ±0.15R; uptime ≥99% | scaffold ✅ |
+| P5 | Live scanner + 30d forward paper | forward within ±0.15R; uptime ≥99% | ✅ functional (live OKX/Duka fetch, HTF, warmup, paper tracker); 30d run pending |
 
 **Iron rule:** no real capital before P4 = GO **and** P5's 30-day forward run confirms it.
 
