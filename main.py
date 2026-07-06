@@ -182,6 +182,55 @@ def cmd_calibrate(args) -> int:
 
 
 # --------------------------------------------------------------------------- #
+# walkforward (rolling re-calibration, fully out-of-sample track)
+# --------------------------------------------------------------------------- #
+def cmd_walkforward(args) -> int:
+    import datetime as _d
+    from backtest.walkforward import walk_forward
+    from backtest.metrics import compute
+    from backtest.report import write_report_md, write_equity_png
+
+    params = Params.load()
+    wl = watchlist()
+    store = Store(args.db)
+    market = args.market or "crypto"
+    curve_tf = _curve_tf(market)
+    symbols = wl[market]["symbols"]
+    tfs = wl[market]["timeframes"]
+
+    folds, oos = walk_forward(
+        store, market, symbols, tfs, curve_tf, params,
+        first_train=_d.datetime(2019, 1, 1), last=_d.datetime(2026, 7, 1),
+        train_months=args.train_months, out_months=args.out_months,
+        step_months=args.out_months,
+    )
+    store.close()
+
+    print(f"Walk-forward ({market}): {len(folds)} folds, "
+          f"train={args.train_months}mo / out={args.out_months}mo\n")
+    print("  out window        n   exp R    PF    params")
+    for f in folds:
+        m = f.out_metrics
+        pf = "inf" if m.profit_factor == float("inf") else f"{m.profit_factor:.2f}"
+        print(f"  {f.out_start}..{f.out_end}  {m.trades:3d}  {m.expectancy_r:+.3f}  "
+              f"{pf:>5}  {f.params}")
+
+    agg = compute(oos)
+    pf = "inf" if agg.profit_factor == float("inf") else f"{agg.profit_factor:.2f}"
+    print(f"\nAggregate OOS track: {agg.trades} trades | exp {agg.expectancy_r:+.3f}R "
+          f"| PF {pf} | win {agg.win_rate*100:.1f}% | maxDD {agg.max_drawdown_r:.1f}R")
+    ok = agg.expectancy_r >= 0.15 and agg.profit_factor >= 1.25 and agg.trades >= 100
+    print(f"=== WALK-FORWARD GATE: {'GO' if ok else 'NO-GO'} ===")
+
+    outdir = args.out
+    write_report_md(oos, f"{outdir}/report.md",
+                    title=f"SDZ Walk-forward ({market})")
+    write_equity_png(oos, f"{outdir}/equity.png")
+    print(f"Report: {outdir}/report.md")
+    return 0
+
+
+# --------------------------------------------------------------------------- #
 # scan (live)
 # --------------------------------------------------------------------------- #
 def cmd_scan(args) -> int:
@@ -256,6 +305,13 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--market", choices=["crypto", "forex"])
     c.add_argument("--min-trades", type=int, default=200, dest="min_trades")
     c.set_defaults(func=cmd_calibrate)
+
+    w = sub.add_parser("walkforward", help="rolling re-calibration, OOS track record")
+    w.add_argument("--market", choices=["crypto", "forex"])
+    w.add_argument("--train-months", type=int, default=24, dest="train_months")
+    w.add_argument("--out-months", type=int, default=6, dest="out_months")
+    w.add_argument("--out", default="runs/wf")
+    w.set_defaults(func=cmd_walkforward)
 
     s = sub.add_parser("scan", help="live scanner + Telegram alerts")
     s.add_argument("--market", choices=["crypto", "forex"])
