@@ -83,19 +83,20 @@ trade is identical.
 
 **Iron rule:** no real capital before P4 = GO **and** P5's 30-day forward run confirms it.
 
-**Verdicts so far** (full story in [`docs/FINDINGS.md`](docs/FINDINGS.md)):
+**Verdicts** (full story + caveats in [`docs/FINDINGS.md`](docs/FINDINGS.md)):
 
-| test | expectancy | PF | verdict |
-|---|---|---|---|
-| Crypto OOS 2024–2026 (calibrated) | +0.174R | 1.22 | ❌ NO-GO (misses PF by 0.03) |
-| Forex 2019–2026 (crypto params, untuned) | +0.251R | 1.33 | ✅ GO |
-| **Forex OOS 2024–2026 (forex-native P3→P4)** | **+0.253R** | **1.33** | ✅ **GO** |
+| test | crypto | forex |
+|---|---|---|
+| Single split (static calibration) | ❌ NO-GO (+0.174R, PF 1.22) | ✅ GO (+0.253R, PF 1.33) |
+| **Walk-forward (rolling re-calibration)** | ✅ **GO (+0.408R, PF 1.58)** | ❌ **NO-GO (+0.076R, PF 1.09)** |
 
-The method shows a **genuine cross-market edge after real costs.** Forex clears
-the gate two independent ways — untuned crypto params *and* a proper forex-native
-train/test split — with near-identical results (+0.251R vs +0.253R), i.e. robust
-to the exact fit. It missed the bar only in the specific recent-crypto regime.
-Reproduce: `python main.py backtest --market forex --start 2019-01-01 --end 2026-06-30 --gate`.
+**The verdict is protocol-sensitive — it flips between static and rolling
+calibration for both markets.** The edge is **real but marginal and fragile**,
+not a robust money-printer. Protocol-independent truths: the Odds Enhancer score
+ranks quality everywhere (validating Seiden's core claim), 4h is consistently
+best, and per-trade edge sits in ~+0.1R to +0.4R after real costs. Walk-forward
+crypto GO is the single most defensible positive result; the forex reversal is
+the cautionary counterweight. Reproduce: `python main.py walkforward --market crypto`.
 
 ## Honest Caveats
 

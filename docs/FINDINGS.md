@@ -173,7 +173,52 @@ on an entirely independent market. Per the iron rule, still **no real capital**
 until a forward paper run (P5) confirms it live. A forex-native P3/P4 (calibrate
 on forex TRAIN, evaluate forex OOS once) is the natural next validation.
 
-## What would make the crypto case a GO (hypotheses for future, clean OOS tests)
+## Walk-forward analysis — the most robust test, and a humbling reframe
+
+Single train/test splits depend on one arbitrary cut. Walk-forward re-calibrates
+on a rolling 24-month TRAIN window (focused grid) and trades the next unseen
+6-month OUT window, sliding forward and concatenating every OUT segment into one
+out-of-sample track. `python main.py walkforward --market <m>`.
+
+| market | folds | trades | aggregate exp | PF | verdict |
+|---|---|---|---|---|---|
+| **crypto** | 11 | 507 | **+0.408R** | 1.58 | ✅ GO (9/11 folds +) |
+| **forex** | 11 | 532 | **+0.076R** | 1.09 | ❌ NO-GO |
+
+**This reverses the single-split verdicts** — and that reversal is the finding:
+
+| market | single split (static) | walk-forward (rolling) |
+|---|---|---|
+| crypto | NO-GO (+0.174R) | **GO (+0.408R)** |
+| forex | GO (+0.253R) | **NO-GO (+0.076R)** |
+
+- **Crypto:** periodic re-calibration *recovers* the edge a stale 2019–2023 fit
+  missed. Even restricted to 2024–2026, the walk-forward folds average ≈+0.377R
+  vs the static +0.174R. Adapting to regime matters.
+- **Forex:** walk-forward *exposes* the static GO as partly lucky. The 2019–2023
+  fit happened to pick `erc_atr_mult=1.5`, which transferred well; rolling
+  windows pick 1.2–1.3 (better on their trailing TRAIN) which then go roughly
+  flat forward. The 2024–2026 forex folds average ≈0.00R.
+
+### The honest bottom line
+
+**The method's GO/NO-GO verdict is protocol-sensitive** — it flips between static
+and rolling calibration for *both* markets. That means the edge is **real but
+marginal and fragile**, not a robust money-printer. What is protocol- and
+market-*independent* (the trustworthy signal):
+
+1. The Odds Enhancer score ranks quality everywhere (higher score → higher
+   expectancy), validating Seiden's central claim.
+2. 4h is consistently the best timeframe.
+3. Per-trade edge lives in roughly the +0.1R to +0.4R band depending on
+   regime/protocol, after real costs — enough to matter, not enough to trust
+   blindly.
+
+Walk-forward crypto GO is the single most defensible positive result (least
+dependent on an arbitrary split), but the forex reversal is the cautionary
+counterweight. **Iron rule stands: no real capital before a live forward run.**
+
+## What would make the case a GO more robustly (future, clean OOS tests)
 
 Do NOT tune these on the used-up OOS window; validate on TRAIN then a fresh
 window (e.g. forward paper 2026-07+):
