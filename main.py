@@ -77,6 +77,14 @@ def _fetch_rows(market: str, symbol: str, tf: str, since: int, until: int) -> Li
         from data import ccxt_fetch
         return ccxt_fetch.fetch_ohlcv(symbol, tf, since, until)
     else:
+        # Dukascopy pre-built candles have deep history; yfinance is the fallback.
+        try:
+            from data import duka_candles
+            rows = duka_candles.fetch_ohlcv(symbol, tf, since, until)
+            if rows:
+                return rows
+        except Exception:
+            pass
         from data import yf_fetch
         return yf_fetch.fetch_ohlcv(symbol, tf)
 
