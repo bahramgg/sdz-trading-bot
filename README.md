@@ -74,16 +74,19 @@ trade is identical.
 
 | Phase | Deliverable | Gate | Status |
 |---|---|---|---|
-| P0 | Repo + fetchers + SQLite store | 2y OHLCV stored & idempotent | scaffold ✅ (needs live fetch run) |
+| P0 | Repo + fetchers + SQLite store | 2y OHLCV stored & idempotent | ✅ real Binance/OKX data 2019–2026 |
 | P1 | Zone engine + unit tests | ≥90% vs hand-labeled zones; lookahead green | engine + tests ✅ |
 | P2 | Backtester + cost model | deterministic; ambiguity rule verified; report | ✅ |
-| P3 | Calibration sweep on TRAIN | grid; ≥200 trades/bucket | harness ✅ (needs data) |
-| P4 | **OOS GO/NO-GO** | exp ≥ +0.15R **and** PF ≥ 1.25 **and** ≥100 trades | `backtest --gate` |
+| P3 | Calibration sweep on TRAIN | grid; expectancy-ranked | ✅ crypto (TRAIN +0.396R) |
+| P4 | **OOS GO/NO-GO** | exp ≥ +0.15R **and** PF ≥ 1.25 **and** ≥100 trades | ❌ **NO-GO** (crypto: +0.174R, PF 1.22) |
 | P5 | Live scanner + 30d forward paper | forward within ±0.15R; uptime ≥99% | scaffold ✅ |
 
 **Iron rule:** no real capital before P4 = GO **and** P5's 30-day forward run confirms it.
 
-Run the P4 gate with `python main.py backtest --start 2024-01-01 --end 2026-06-30 --gate`.
+**Current crypto verdict: NO-GO** — the calibrated method is out-of-sample
+positive (+0.174R expectancy) but misses the profit-factor gate (1.22 < 1.25).
+Full story in [`docs/FINDINGS.md`](docs/FINDINGS.md). Reproduce:
+`python main.py backtest --market crypto --start 2024-01-01 --end 2026-06-30 --gate`.
 
 ## Honest Caveats
 

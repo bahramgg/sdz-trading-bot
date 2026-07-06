@@ -12,9 +12,9 @@ tf_pairs:
 
 # --- 2.1 Candle classification ---
 atr_period: 14
-erc_atr_mult: 1.3        # ERC: range >= ERC_ATR_MULT * atr
+erc_atr_mult: 1.2        # ERC: range >= ERC_ATR_MULT * atr   [P3-calibrated, was 1.3]
 erc_body_min: 0.55       # ERC: body/range >= ERC_BODY_MIN
-base_body_max: 0.45      # basing: body/range <= BASE_BODY_MAX ...
+base_body_max: 0.5       # basing: body/range <= BASE_BODY_MAX  [P3-calibrated, was 0.45]
 base_atr_max: 0.8        # ... OR range <= BASE_ATR_MAX * atr
 
 # --- 2.2 Base / pattern detection ---
@@ -30,7 +30,7 @@ zone_max_age_bars:
   curve: null            # no expiry on curve TF (e.g. 1D)
 
 # --- 2.5 Odds Enhancer scoring ---
-min_score: 6             # trade filter: only zones with score >= MIN_SCORE trade
+min_score: 8             # trade filter: only zones with score >= MIN_SCORE trade  [P3-calibrated, was 6]
 ema_period: 50           # HTF trend EMA for alignment enhancer
 
 # --- 2.6 Entry / Stop / Target ---
