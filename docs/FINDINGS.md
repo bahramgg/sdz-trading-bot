@@ -127,12 +127,28 @@ spread/slippage; avg win 2.74R = 3R target − costs).
 2024–2026 (−0.071R) — is the **best** forex pattern (+0.495R, PF 1.72). Pattern
 edge is regime/asset dependent; the aggregate method is what generalizes.
 
+## Forex-native P3 → P4 (calibrate on forex TRAIN, evaluate forex OOS once)
+
+To confirm the forex GO survives a proper train/test split (not just untuned
+application), a forex-only calibration was run on TRAIN 2019–2023, then evaluated
+once on OOS 2024–2026.
+
+- **P3 winner (forex TRAIN):** base_body_max=0.45, erc_atr_mult=1.5,
+  proximal_mode=body, tp_mode=hybrid, min_score=8 → TRAIN +0.415R, PF 1.57.
+- **P4 (forex OOS, once):** **142 trades, +0.253R, PF 1.33, 38.0% win → GO.**
+
+The OOS number (+0.253R) is nearly identical to the untuned generalization run
+(+0.251R): the method is **robust to the exact parameter fit** — a reassuring
+sign it is capturing structure, not noise. Forex TRAIN→OOS degradation is mild
+(+0.415R → +0.253R) versus crypto, which flipped NO-GO.
+
 ### Where this leaves the project
 
 | test | verdict |
 |---|---|
 | Crypto OOS 2024–2026 (calibrated) | NO-GO (+0.174R, PF 1.22) |
-| **Forex 2019–2026 (crypto params, untuned)** | **GO (+0.251R, PF 1.33)** |
+| Forex 2019–2026 (crypto params, untuned) | **GO (+0.251R, PF 1.33)** |
+| **Forex OOS 2024–2026 (forex-native P3→P4)** | **GO (+0.253R, PF 1.33)** |
 
 The mechanized Seiden S&D method shows a **genuine, cross-market edge after real
 costs.** It missed the bar in the specific recent-crypto regime but cleared it

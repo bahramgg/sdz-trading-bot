@@ -88,11 +88,13 @@ trade is identical.
 | test | expectancy | PF | verdict |
 |---|---|---|---|
 | Crypto OOS 2024–2026 (calibrated) | +0.174R | 1.22 | ❌ NO-GO (misses PF by 0.03) |
-| **Forex 2019–2026 (crypto params, untuned)** | **+0.251R** | **1.33** | ✅ **GO** |
+| Forex 2019–2026 (crypto params, untuned) | +0.251R | 1.33 | ✅ GO |
+| **Forex OOS 2024–2026 (forex-native P3→P4)** | **+0.253R** | **1.33** | ✅ **GO** |
 
-The method shows a **genuine cross-market edge after real costs** — it cleared
-the gate on forex/gold using parameters fit only on crypto, i.e. a market never
-used for tuning. It missed the bar only in the specific recent-crypto regime.
+The method shows a **genuine cross-market edge after real costs.** Forex clears
+the gate two independent ways — untuned crypto params *and* a proper forex-native
+train/test split — with near-identical results (+0.251R vs +0.253R), i.e. robust
+to the exact fit. It missed the bar only in the specific recent-crypto regime.
 Reproduce: `python main.py backtest --market forex --start 2019-01-01 --end 2026-06-30 --gate`.
 
 ## Honest Caveats
