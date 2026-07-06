@@ -35,8 +35,14 @@ ema_period: 50           # HTF trend EMA for alignment enhancer
 
 # --- 2.6 Entry / Stop / Target ---
 stop_buffer_atr: 0.1     # stop beyond distal buffer
-tp_mode: "fixed_3R"      # fixed_3R | opposing_zone | hybrid
+tp_mode: "fixed_3R"      # fixed_3R | opposing_zone | hybrid (the runner's final target)
 tp_hybrid_floor_r: 2.0   # hybrid floor
+
+# Exit management (P-follow-up: lift profit factor)
+exit_mode: "scaleout"    # setforget | scaleout  [scaleout lifts PF ~1.5->2.0 and halves drawdown]
+scale_tp1_r: 1.0         # scaleout: take partial at this R multiple
+scale_fraction: 0.5      # scaleout: fraction of position closed at TP1
+scale_move_be: true      # scaleout: move stop to breakeven after TP1
 
 # --- 4. Live scanner alert thresholds ---
 alert_min_score: 7

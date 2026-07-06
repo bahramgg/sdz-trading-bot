@@ -61,6 +61,10 @@ class Params:
     stop_buffer_atr: float
     tp_mode: str
     tp_hybrid_floor_r: float
+    exit_mode: str
+    scale_tp1_r: float
+    scale_fraction: float
+    scale_move_be: bool
     alert_min_score: int
     approach_atr: float
 
@@ -82,6 +86,10 @@ class Params:
             stop_buffer_atr=float(p["stop_buffer_atr"]),
             tp_mode=str(p["tp_mode"]),
             tp_hybrid_floor_r=float(p["tp_hybrid_floor_r"]),
+            exit_mode=str(p.get("exit_mode", "setforget")),
+            scale_tp1_r=float(p.get("scale_tp1_r", 1.0)),
+            scale_fraction=float(p.get("scale_fraction", 0.5)),
+            scale_move_be=bool(p.get("scale_move_be", True)),
             alert_min_score=int(p["alert_min_score"]),
             approach_atr=float(p["approach_atr"]),
         )

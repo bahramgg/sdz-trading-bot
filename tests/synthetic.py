@@ -75,6 +75,22 @@ def supply_rbd() -> List[Candle]:
     return cs
 
 
+def demand_dbr_scaleout_be() -> List[Candle]:
+    """Demand zone that fills, taps TP1 (98.9), then reverses to breakeven (98.3)
+    without reaching the final target. Under scaleout this is partial-only:
+    +scale_fraction*tp1_r (= +0.5R with defaults)."""
+    cs = seed(18)
+    n = len(cs)
+    cs.append(_c(n + 0, 100.0, 100.2, 98.0, 98.2))   # 18 leg-in bear ERC
+    cs.append(_c(n + 1, 98.2, 98.6, 97.8, 98.1))     # 19 base 1
+    cs.append(_c(n + 2, 98.1, 98.5, 97.9, 98.3))     # 20 base 2
+    cs.append(_c(n + 3, 98.3, 100.6, 98.2, 100.4))   # 21 leg-out bull ERC
+    cs.append(_c(n + 4, 99.5, 99.6, 98.2, 99.0))     # 22 fill @98.3 + TP1 @98.9 (no target)
+    cs.append(_c(n + 5, 99.0, 99.1, 98.2, 98.4))     # 23 back to breakeven (low<=98.3)
+    cs.append(_c(n + 6, 98.4, 98.6, 98.2, 98.5))     # 24 tail
+    return cs
+
+
 def flat_no_zone() -> List[Candle]:
     """Only basing candles -> no ERC -> no zones at all."""
     return seed(40)

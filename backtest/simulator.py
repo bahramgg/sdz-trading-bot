@@ -198,15 +198,34 @@ def _open_and_manage(zone, all_zones, classified, fill_i, prior_tests, cfg, para
     if sc.score < params.min_score:
         return None
 
-    # Manage the position from the fill candle onward.
-    n = len(classified)
-    for k in range(fill_i, n):
+    if plan.tp1 is not None:
+        return _manage_scaleout(zone, plan, sc, classified, fill_i, cfg, params,
+                                lower_tf_candles)
+    return _manage_setforget(zone, plan, sc, classified, fill_i, cfg, params,
+                             lower_tf_candles)
+
+
+def _make_trade(zone, plan, sc, classified, fill_i, exit_k, exit_price,
+                gross_r, cost, cfg) -> Trade:
+    return Trade(
+        zone=zone, plan=plan, score=sc.score, freshness=sc.breakdown["freshness"],
+        entry_index=fill_i, exit_index=exit_k,
+        entry_ts=classified[fill_i].candle.ts, exit_ts=classified[exit_k].candle.ts,
+        entry=zone.proximal, exit_price=exit_price,
+        outcome=("WIN" if gross_r > 0 else "LOSS"),
+        gross_r=gross_r, cost_r=cost / plan.r, market=cfg.market,
+    )
+
+
+def _manage_setforget(zone, plan, sc, classified, fill_i, cfg, params, lower_tf):
+    """Original set-and-forget management: one target, one stop (§2.6)."""
+    for k in range(fill_i, len(classified)):
         c = classified[k].candle
         sl, tp = _hit(zone.ztype, c, plan.stop, plan.target)
-        outcome: Optional[str] = None
+        outcome = None
         exit_price = 0.0
         if sl and tp:
-            outcome = _resolve_ambiguity(zone.ztype, c, plan, lower_tf_candles)
+            outcome = _resolve_ambiguity(zone.ztype, c, plan, lower_tf)
             exit_price = plan.stop if outcome == "LOSS" else plan.target
         elif sl:
             outcome, exit_price = "LOSS", plan.stop
@@ -214,13 +233,68 @@ def _open_and_manage(zone, all_zones, classified, fill_i, prior_tests, cfg, para
             outcome, exit_price = "WIN", plan.target
         if outcome is not None:
             gross_r = plan.target_r if outcome == "WIN" else -1.0
-            cost_r = round_trip_cost(cfg.market, cfg.symbol, zone.proximal, exit_price) / plan.r
-            return Trade(
-                zone=zone, plan=plan, score=sc.score,
-                freshness=sc.breakdown["freshness"],
-                entry_index=fill_i, exit_index=k,
-                entry_ts=classified[fill_i].candle.ts, exit_ts=c.ts,
-                entry=zone.proximal, exit_price=exit_price,
-                outcome=outcome, gross_r=gross_r, cost_r=cost_r, market=cfg.market,
-            )
-    return None  # never resolved before data ran out -> dropped (open)
+            cost = round_trip_cost(cfg.market, cfg.symbol, zone.proximal, exit_price)
+            return _make_trade(zone, plan, sc, classified, fill_i, k, exit_price,
+                               gross_r, cost, cfg)
+    return None
+
+
+def _manage_scaleout(zone, plan, sc, classified, fill_i, cfg, params, lower_tf):
+    """Scale-out management: take ``scale_fraction`` off at TP1, move the stop to
+    breakeven, let the runner target the final target. Turns many round-trips to
+    -1R into small wins — the profit-factor lever. Same conservative intrabar
+    ambiguity rule as set-and-forget."""
+    entry = zone.proximal
+    frac = params.scale_fraction
+    partial_r = frac * params.scale_tp1_r
+    be = entry if params.scale_move_be else plan.stop
+    partial_taken = False
+    stop = plan.stop
+
+    def reached(price, c):  # did candle c trade to `price` in the trade's favor?
+        return c.high >= price if zone.ztype == ZoneType.DEMAND else c.low <= price
+
+    def cost_of(runner_exit):
+        # entry (full) + partial exit at TP1 (frac) + runner exit (1-frac), per side
+        return (per_side_cost(cfg.market, cfg.symbol, entry)
+                + frac * per_side_cost(cfg.market, cfg.symbol, plan.tp1)
+                + (1 - frac) * per_side_cost(cfg.market, cfg.symbol, runner_exit))
+
+    for k in range(fill_i, len(classified)):
+        c = classified[k].candle
+        if not partial_taken:
+            sl, tp1 = _hit(zone.ztype, c, stop, plan.tp1)
+            if sl and tp1:
+                # conservative: assume the original stop hit before TP1
+                if _resolve_ambiguity(zone.ztype, c, plan, lower_tf) == "LOSS":
+                    cost = round_trip_cost(cfg.market, cfg.symbol, entry, stop)
+                    return _make_trade(zone, plan, sc, classified, fill_i, k, stop,
+                                       -1.0, cost, cfg)
+                partial_taken, stop = True, be
+            elif sl:
+                cost = round_trip_cost(cfg.market, cfg.symbol, entry, stop)
+                return _make_trade(zone, plan, sc, classified, fill_i, k, stop,
+                                   -1.0, cost, cfg)
+            elif tp1:
+                partial_taken, stop = True, be
+            else:
+                continue
+            # Partial just taken on THIS candle. Only credit the runner's final
+            # target if the same candle printed it; the breakeven stop is not
+            # armed until the next candle (this candle's low is the fill dip).
+            if reached(plan.target, c):
+                gross = partial_r + (1 - frac) * plan.target_r
+                return _make_trade(zone, plan, sc, classified, fill_i, k, plan.target,
+                                   gross, cost_of(plan.target), cfg)
+            continue
+
+        # Phase 2 (candles after TP1): stop is at breakeven.
+        be_hit, tp = _hit(zone.ztype, c, be, plan.target)
+        if be_hit:  # conservative: breakeven before final target on the same candle
+            return _make_trade(zone, plan, sc, classified, fill_i, k, be,
+                               partial_r, cost_of(be), cfg)
+        if tp:
+            gross = partial_r + (1 - frac) * plan.target_r
+            return _make_trade(zone, plan, sc, classified, fill_i, k, plan.target,
+                               gross, cost_of(plan.target), cfg)
+    return None

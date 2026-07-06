@@ -17,6 +17,7 @@ class TradePlan:
     target: float
     r: float           # per-unit risk = |entry - stop|
     target_r: float    # reward in R multiples
+    tp1: Optional[float] = None    # scale-out partial level (price), if exit_mode=scaleout
 
     @property
     def sign(self) -> int:
@@ -73,7 +74,13 @@ def build_trade_plan(
     tr = dist_r(target)
     if tr <= 0:
         return None
-    return TradePlan(ztype=zone.ztype, entry=entry, stop=stop, target=target, r=r, target_r=tr)
+
+    tp1 = None
+    if params.exit_mode == "scaleout" and tr > params.scale_tp1_r:
+        tp1 = entry + sign * params.scale_tp1_r * r
+
+    return TradePlan(ztype=zone.ztype, entry=entry, stop=stop, target=target,
+                     r=r, target_r=tr, tp1=tp1)
 
 
 def advance_lifecycle(
