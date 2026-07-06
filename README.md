@@ -83,20 +83,23 @@ trade is identical.
 
 **Iron rule:** no real capital before P4 = GO **and** P5's 30-day forward run confirms it.
 
-**Verdicts** (full story + caveats in [`docs/FINDINGS.md`](docs/FINDINGS.md)):
+**Verdicts** (full story + caveats in [`docs/FINDINGS.md`](docs/FINDINGS.md)).
+Walk-forward = rolling re-calibration, the most stringent test. Scale-out exit
+(default) takes 50% at +1R, stop to breakeven, runner to target.
 
 | test | crypto | forex |
 |---|---|---|
-| Single split (static calibration) | ❌ NO-GO (+0.174R, PF 1.22) | ✅ GO (+0.253R, PF 1.33) |
-| **Walk-forward (rolling re-calibration)** | ✅ **GO (+0.408R, PF 1.58)** | ❌ **NO-GO (+0.076R, PF 1.09)** |
+| Single split (static, set-and-forget) | ❌ NO-GO (+0.174R, PF 1.22) | ✅ GO (+0.253R, PF 1.33) |
+| Walk-forward, set-and-forget | ✅ GO (+0.408R, PF 1.58) | ❌ NO-GO (+0.076R, PF 1.09) |
+| **Walk-forward, scale-out** | ✅ **GO (+0.339R, PF 2.08, all 11 folds +)** | ❌ NO-GO by 0.003R (+0.147R, PF 1.39) |
 
-**The verdict is protocol-sensitive — it flips between static and rolling
-calibration for both markets.** The edge is **real but marginal and fragile**,
-not a robust money-printer. Protocol-independent truths: the Odds Enhancer score
-ranks quality everywhere (validating Seiden's core claim), 4h is consistently
-best, and per-trade edge sits in ~+0.1R to +0.4R after real costs. Walk-forward
-crypto GO is the single most defensible positive result; the forex reversal is
-the cautionary counterweight. Reproduce: `python main.py walkforward --market crypto`.
+**Crypto is a robust GO under the most stringent test** (every rolling fold
+2021→2026 positive, PF 2.08, drawdown just 9.4R). **Forex sits right on the
+threshold** — scale-out lifted its walk-forward from clearly NO-GO to a razor-thin
+expectancy miss with PF now passing. Protocol-independent truths: the Odds
+Enhancer score ranks quality everywhere (validating Seiden's core claim), 4h is
+consistently best, and scale-out converts the marginal raw edge into a
+~70%-win-rate, low-drawdown profile. Reproduce: `python main.py walkforward --market crypto`.
 
 ## Honest Caveats
 

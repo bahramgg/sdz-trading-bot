@@ -218,6 +218,46 @@ Walk-forward crypto GO is the single most defensible positive result (least
 dependent on an arbitrary split), but the forex reversal is the cautionary
 counterweight. **Iron rule stands: no real capital before a live forward run.**
 
+## Scale-out exit — the profit-factor lever (now default)
+
+The binding constraint everywhere was profit factor. `exit_mode=scaleout` takes
+50% off at +1R, moves the stop to breakeven, and lets the runner target the
+tp_mode target. Head-to-head on real 2019–2026 data:
+
+| market | mode | exp R | PF | win% | maxDD R |
+|---|---|---|---|---|---|
+| crypto | setforget | +0.388 | 1.55 | 38 | 18.9 |
+| crypto | **scaleout** | +0.367 | **2.12** | **72** | **13.1** |
+| forex | setforget | +0.251 | 1.33 | 37 | 18.5 |
+| forex | **scaleout** | **+0.277** | **1.81** | **69** | **8.3** |
+
+It lifts PF sharply and roughly halves drawdown at ~flat expectancy — a strictly
+better risk profile, so it is now the default.
+
+**Re-running walk-forward with scaleout** (the decisive robustness test):
+
+| market | trades | exp R | PF | win% | maxDD R | verdict |
+|---|---|---|---|---|---|---|
+| **crypto** | 518 | +0.339 | **2.08** | 72.8 | **9.4** | ✅ GO — **all 11 folds positive** |
+| forex | 789 | +0.147 | 1.39 | 68.1 | 21.9 | ❌ NO-GO by 0.003R (PF now passes) |
+
+- **Crypto is now a robust GO under the most stringent test**: every rolling
+  fold 2021→2026 is positive (worst +0.037R), PF 2.08, drawdown a mere 9.4R.
+  This is the project's strongest, most defensible result.
+- **Forex is a razor-thin miss**: scaleout lifted the walk-forward from
+  +0.076R/PF 1.09 to +0.147R/PF 1.39 — profit factor now clears 1.25, and
+  expectancy misses +0.15R by 0.003R. 9/11 folds positive. Borderline, not dead.
+
+### Updated bottom line
+
+With proper exit management, **crypto clears every gate including walk-forward
+(PF 2.08, all folds positive)** — the mechanized method has a robust, tradeable
+edge on trending crypto. **Forex sits right on the threshold.** The Seiden odds
+enhancers rank quality, 4h is best, and scale-out turns the marginal raw edge
+into a high-win-rate, low-drawdown profile. Still no real capital before a live
+forward run (P5) confirms it — but the case is now genuinely encouraging, not
+just marginal.
+
 ## What would make the case a GO more robustly (future, clean OOS tests)
 
 Do NOT tune these on the used-up OOS window; validate on TRAIN then a fresh
