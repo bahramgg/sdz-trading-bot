@@ -142,6 +142,23 @@ The OOS number (+0.253R) is nearly identical to the untuned generalization run
 sign it is capturing structure, not noise. Forex TRAIN→OOS degradation is mild
 (+0.415R → +0.253R) versus crypto, which flipped NO-GO.
 
+**⚠️ The forex GO is not uniform across symbols (OOS 2024–2026):**
+
+| symbol | trades | expectancy R | PF |
+|---|---|---|---|
+| XAUUSD (gold) | 61 | **+0.400** | 1.58 |
+| GBPUSD | 37 | +0.289 | 1.37 |
+| EURUSD | 44 | +0.018 | 1.02 (essentially flat) |
+
+The edge concentrates in the **more impulsive/trending instruments** — gold
+carries the aggregate, cable is solid, and EURUSD is barely above break-even.
+This fits the thesis that supply/demand imbalance works better on trending
+markets than on mean-reverting majors, and it means "cross-market edge" should
+be read as **"works on trending instruments (crypto-in-trend, gold, GBP), weak
+on range-bound majors (EURUSD)"** — not a blanket claim. A live deployment
+should weight or filter toward the instrument types where the edge actually
+shows up.
+
 ### Where this leaves the project
 
 | test | verdict |
