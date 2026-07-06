@@ -231,6 +231,67 @@ def cmd_walkforward(args) -> int:
 
 
 # --------------------------------------------------------------------------- #
+# forward (persistent paper-trade tracking, the P5 gate)
+# --------------------------------------------------------------------------- #
+def cmd_forward(args) -> int:
+    from engine.candles import Candle
+    from live.forward import ForwardTracker
+
+    params = Params.load()
+    wl = watchlist()
+    tracker = ForwardTracker(params)
+    now = _now_ms()
+    markets = [args.market] if args.market else ["crypto", "forex"]
+
+    bars = args.bars
+
+    def make_fetch(market):
+        def fetch(symbol, tf):
+            try:
+                if market == "crypto":
+                    from data import ccxt_fetch
+                    if tf not in ccxt_fetch._TF_MS:
+                        return []
+                    since = now - bars * ccxt_fetch._TF_MS[tf]
+                    rows = ccxt_fetch.fetch_ohlcv(symbol, tf, since)
+                else:
+                    from data import duka_candles
+                    if tf not in duka_candles._AGG:      # e.g. 15m not served as candles
+                        return []
+                    since = now - bars * duka_candles._AGG[tf] * 3_600_000
+                    rows = duka_candles.fetch_ohlcv(symbol, tf, since)
+            except Exception as exc:
+                print(f"  ! fetch {market} {symbol} {tf}: {exc}", file=sys.stderr)
+                return []
+            return [Candle(r[0], r[1], r[2], r[3], r[4], r[5] if len(r) > 5 else 0.0)
+                    for r in rows]
+        return fetch
+
+    total_new = 0
+    for market in markets:
+        cfg = wl[market]
+        curve_tf = _curve_tf(market)
+        try:
+            n = tracker.step(market, cfg["symbols"], cfg["timeframes"], curve_tf,
+                             make_fetch(market), now)
+        except Exception as exc:
+            print(f"  ! {market}: {exc}", file=sys.stderr)
+            continue
+        total_new += n
+        print(f"  {market}: +{n} newly-resolved forward trades")
+    tracker.save()
+
+    s = tracker.summary()
+    pf = "inf" if s["profit_factor"] == float("inf") else f"{s['profit_factor']:.2f}"
+    print(f"\nForward record: {s['trades']} resolved | exp {s['expectancy_r']:+.3f}R "
+          f"| PF {pf} | win {s['win_rate']*100:.1f}%")
+    print("Backtest reference (walk-forward): crypto +0.378R / forex +0.237R. "
+          "P5 gate: forward within +/-0.15R.")
+    print(f"Log: {tracker.path} ({total_new} added this run)")
+    return 0
+
+
+# --------------------------------------------------------------------------- #
 # scan (live)
 # --------------------------------------------------------------------------- #
 def cmd_scan(args) -> int:
@@ -312,6 +373,11 @@ def build_parser() -> argparse.ArgumentParser:
     w.add_argument("--out-months", type=int, default=6, dest="out_months")
     w.add_argument("--out", default="runs/wf")
     w.set_defaults(func=cmd_walkforward)
+
+    fw = sub.add_parser("forward", help="persistent forward paper-trade tracking (P5 gate)")
+    fw.add_argument("--market", choices=["crypto", "forex"])
+    fw.add_argument("--bars", type=int, default=800, help="recent candles to fetch per stream")
+    fw.set_defaults(func=cmd_forward)
 
     s = sub.add_parser("scan", help="live scanner + Telegram alerts")
     s.add_argument("--market", choices=["crypto", "forex"])
