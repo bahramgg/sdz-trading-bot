@@ -8,7 +8,9 @@ from backtest.simulator import (SimConfig, _resolve_ambiguity, simulate_symbol)
 from engine.lifecycle import TradePlan
 from tests import synthetic
 
-P = Params.load()
+# Pin these to set-and-forget so they assert the single-target R math regardless
+# of the configured default exit_mode (scale-out has its own suite).
+P = Params.load().override(exit_mode="setforget")
 
 
 def test_demand_trade_is_a_win():
