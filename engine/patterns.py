@@ -27,20 +27,28 @@ def _pattern_of(leg_in: Dir, leg_out: Dir) -> tuple[ZoneType, Pattern] | None:
 
 def _boundaries(
     ztype: ZoneType, base: Sequence[Classified], mode: str
-) -> tuple[float, float]:
-    """Return (proximal, distal) for the base per §2.3."""
+) -> tuple[float, float, float]:
+    """Return (proximal, distal, test_edge) for the base per §2.3.
+
+    ``test_edge`` is the wick near-edge (base high for demand, base low for
+    supply): the outermost boundary price must enter to "test" the zone. The
+    entry ``proximal`` sits deeper (body-based by default), so a wick that taps
+    the test band without reaching proximal counts as a test, not a fill.
+    """
     lows = [c.candle.low for c in base]
     highs = [c.candle.high for c in base]
     body_hi = [max(c.candle.open, c.candle.close) for c in base]
     body_lo = [min(c.candle.open, c.candle.close) for c in base]
     if ztype == ZoneType.DEMAND:
         distal = min(lows)
-        proximal = max(highs) if mode == "wick" else max(body_hi)
-        return proximal, distal
+        test_edge = max(highs)
+        proximal = test_edge if mode == "wick" else max(body_hi)
+        return proximal, distal, test_edge
     else:  # SUPPLY
         distal = max(highs)
-        proximal = min(lows) if mode == "wick" else min(body_lo)
-        return proximal, distal
+        test_edge = min(lows)
+        proximal = test_edge if mode == "wick" else min(body_lo)
+        return proximal, distal, test_edge
 
 
 def detect_zones(
@@ -85,7 +93,7 @@ def detect_zones(
         if ztype == ZoneType.SUPPLY and not (leg_out.candle.close < base_low):
             continue
 
-        proximal, distal = _boundaries(ztype, base, params.proximal_mode)
+        proximal, distal, test_edge = _boundaries(ztype, base, params.proximal_mode)
 
         # Discard oversized zones (§2.3).
         atr = leg_out.atr
@@ -100,6 +108,7 @@ def detect_zones(
                 pattern=pattern,
                 proximal=proximal,
                 distal=distal,
+                test_edge=test_edge,
                 leg_in_index=leg_in_idx,
                 base_start=start,
                 base_end=end,

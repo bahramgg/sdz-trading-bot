@@ -104,9 +104,8 @@ def advance_lifecycle(
             zone.broken_index = i
             return zone
 
-        # 2. test: any trade into the band
-        lo, hi = sorted((zone.proximal, zone.distal))
-        if c.low <= hi and c.high >= lo:
+        # 2. test: any trade into the wick test band [distal, test_edge]
+        if zone.candle_tests(c.low, c.high):
             zone.test_count += 1
             if zone.state == ZoneState.FRESH:
                 zone.state = ZoneState.TESTED

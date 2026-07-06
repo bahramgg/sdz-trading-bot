@@ -42,6 +42,25 @@ def demand_dbr() -> List[Candle]:
     return cs
 
 
+def demand_dbr_retest() -> List[Candle]:
+    """Same demand zone as demand_dbr, but the first pullback only wicks into the
+    test band [97.8, 98.6] (low 98.45) WITHOUT reaching the body proximal (98.3),
+    so it is a test, not a fill. Price then returns and fills on the retest ->
+    freshness should score 1, not 2.
+    """
+    cs = seed(18)
+    n = len(cs)
+    cs.append(_c(n + 0, 100.0, 100.2, 98.0, 98.2))   # 18 leg-in bear ERC
+    cs.append(_c(n + 1, 98.2, 98.6, 97.8, 98.1))     # 19 base 1
+    cs.append(_c(n + 2, 98.1, 98.5, 97.9, 98.3))     # 20 base 2
+    cs.append(_c(n + 3, 98.3, 100.6, 98.2, 100.4))   # 21 leg-out bull ERC (confirm)
+    cs.append(_c(n + 4, 99.5, 99.6, 98.45, 99.0))    # 22 wick test (no fill: low>prox)
+    cs.append(_c(n + 5, 99.0, 99.1, 98.2, 98.5))     # 23 retest -> fill @98.3
+    cs.append(_c(n + 6, 98.5, 100.3, 98.4, 100.2))   # 24 rally -> TP
+    cs.append(_c(n + 7, 100.2, 100.4, 99.8, 100.0))  # 25 tail
+    return cs
+
+
 def supply_rbd() -> List[Candle]:
     """A rally-base-drop supply zone (mirror of demand_dbr)."""
     cs = seed(18)

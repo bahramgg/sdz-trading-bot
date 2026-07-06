@@ -140,8 +140,6 @@ def simulate_symbol(
 
 def _simulate_zone(zone, all_zones, classified, cfg, params,
                    curve_candles, lower_tf_candles) -> Optional[Trade]:
-    band_lo = min(zone.proximal, zone.distal)
-    band_hi = max(zone.proximal, zone.distal)
     prior_tests = 0
     max_age = None if cfg.tf_is_curve else params.zone_max_age_bars_default
 
@@ -167,8 +165,9 @@ def _simulate_zone(zone, all_zones, classified, cfg, params,
             return _open_and_manage(zone, all_zones, classified, i, prior_tests,
                                     cfg, params, curve_candles, lower_tf_candles)
 
-        # not filled — did the candle test the band?
-        if c.low <= band_hi and c.high >= band_lo:
+        # not filled — did the candle tap the wick test band without reaching
+        # the entry line? that is a prior test that ages the zone's freshness.
+        if zone.candle_tests(c.low, c.high):
             prior_tests += 1
     return None
 

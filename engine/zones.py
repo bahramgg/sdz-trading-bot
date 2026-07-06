@@ -34,8 +34,12 @@ class Zone:
     pattern: Pattern
 
     # boundaries (§2.3)
-    proximal: float          # price nearest to approach (entry line)
+    proximal: float          # entry/fill line (body-based by default)
     distal: float            # far edge (stop side)
+    test_edge: float         # wick near-edge of the base (outermost); the zone is
+                             # "tested" when price enters [distal, test_edge], but a
+                             # fill needs price to reach the deeper `proximal` line.
+                             # This is what lets freshness actually vary (see score.py).
 
     # provenance indices into the classified candle list
     leg_in_index: int
@@ -68,6 +72,15 @@ class Zone:
         return abs(self.proximal - self.distal)
 
     def contains(self, price: float) -> bool:
-        """True if price is within the [proximal, distal] band (inclusive)."""
+        """True if price is within the [proximal, distal] entry band (inclusive)."""
         lo, hi = sorted((self.proximal, self.distal))
         return lo <= price <= hi
+
+    def test_band(self) -> tuple[float, float]:
+        """(lo, hi) of the wick-based test band [distal, test_edge]."""
+        return tuple(sorted((self.distal, self.test_edge)))  # type: ignore[return-value]
+
+    def candle_tests(self, low: float, high: float) -> bool:
+        """True if a candle's [low, high] intersects the wick test band."""
+        lo, hi = self.test_band()
+        return low <= hi and high >= lo

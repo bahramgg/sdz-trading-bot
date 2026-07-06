@@ -64,14 +64,36 @@ supply/reversal-leaning patterns (DBD, RBD, DBR) all held their edge OOS.
 
 By timeframe, 4h remained strongest OOS (+0.260R, PF 1.35).
 
-## Standing engine finding — freshness enhancer is degenerate
+## Engine fix — freshness enhancer made live (wick-test / body-fill model)
 
-Every backtested trade still scores freshness = 2. With a limit resting at the
-proximal (near edge of the band), the first candle to reach the band fills while
-the zone is fresh, so `prior_tests` is always 0 at fill. The freshness enhancer
-does no discriminating work under this fill model — a real design limitation to
-revisit (score freshness by prior approaches short of proximal, or model the
-zone as "armed" only after price leaves and returns).
+**Problem (was):** every backtested trade scored freshness = 2. With a limit at
+the body proximal and "test" defined on the entry band, the first candle to
+reach the band both tests *and* fills, so `prior_tests` was always 0.
+
+**Fix:** the zone now carries a wick-based `test_edge` (base high for demand,
+base low for supply) that is the outer edge of a **test band** `[distal,
+test_edge]`, distinct from the deeper body `proximal` fill line. A candle that
+taps the test band without reaching proximal is a *test, not a fill*, so it ages
+freshness. Covered by `tests/test_freshness.py` (first touch → 2; wick-tap then
+retest fill → 1).
+
+**Empirical result — freshness still barely varies, and does not move P4:**
+
+| freshness | TRAIN trades | TRAIN exp R |
+|---|---|---|
+| 2 (fresh) | 256 | +0.408 |
+| 1 (retest) | 8 | +0.873 (n=8, noise) |
+
+Only ~3% of fills are retests: the method structurally trades fresh zones, so
+even a correct freshness enhancer has little discriminating power here. OOS
+re-check with the fix (⚠️ OOS already used — not a clean gate): **152 trades,
++0.171R, PF 1.22 — still NO-GO.** The fix also made the "active while fresh or
+tested(1)" rule fire on wick taps, trimming 258→152 trades while holding
+per-trade expectancy (~+0.17R) — more selective, same edge.
+
+**Takeaway:** the binding constraint is **profit factor (~1.22), not freshness.**
+Lifting it needs exit/target work or a regime filter, not scoring tweaks —
+validated on a fresh window, since OOS is now spent.
 
 ## What would make this a GO (hypotheses for future, clean OOS tests)
 
