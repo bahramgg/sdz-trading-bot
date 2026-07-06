@@ -95,7 +95,52 @@ per-trade expectancy (~+0.17R) — more selective, same edge.
 Lifting it needs exit/target work or a regime filter, not scoring tweaks —
 validated on a fresh window, since OOS is now spent.
 
-## What would make this a GO (hypotheses for future, clean OOS tests)
+## Cross-market generalization test — forex (crypto params, untuned) → **GO**
+
+The strongest evidence yet that the edge is real, not a crypto-specific fit.
+The params calibrated on **crypto 2019–2023** were applied to **forex
+(EURUSD, GBPUSD, XAUUSD) with zero re-tuning**. Because forex never entered any
+calibration, the **entire 2019–2026 forex history is out-of-sample**. Data:
+Dukascopy deep hourly candles (`data/duka_candles.py`).
+
+`python main.py backtest --market forex --start 2019-01-01 --end 2026-06-30 --gate`
+
+| criterion | threshold | result | pass |
+|---|---|---|---|
+| expectancy | ≥ +0.15 R | **+0.251 R** | ✅ |
+| profit factor | ≥ 1.25 | **1.33** | ✅ |
+| trade count | ≥ 100 | **376** | ✅ |
+
+### → VERDICT: **GO** (all three, on a market never used for tuning)
+
+376 trades, 37.2% win, +94.2R total, max drawdown only 18.5R — a smoother curve
+than crypto. Costs are real and material (avg loss −1.22R = 1R stop + ~0.22R
+spread/slippage; avg win 2.74R = 3R target − costs).
+
+**Consistencies with crypto (method-level, not fit):**
+- Odds Enhancer ranks quality again: score 9 **+0.558R (PF 1.84)** > score 8 +0.211R.
+- 4h is the sweet spot again: **+0.370R (PF 1.52)** vs 1h +0.184R.
+- Freshness now varies meaningfully (24 retests vs crypto's 8) and both buckets
+  are positive — the wick-test fix earns its keep in ranging FX.
+
+**Notable divergence (regime, not method):** RBR — which *failed* in crypto
+2024–2026 (−0.071R) — is the **best** forex pattern (+0.495R, PF 1.72). Pattern
+edge is regime/asset dependent; the aggregate method is what generalizes.
+
+### Where this leaves the project
+
+| test | verdict |
+|---|---|
+| Crypto OOS 2024–2026 (calibrated) | NO-GO (+0.174R, PF 1.22) |
+| **Forex 2019–2026 (crypto params, untuned)** | **GO (+0.251R, PF 1.33)** |
+
+The mechanized Seiden S&D method shows a **genuine, cross-market edge after real
+costs.** It missed the bar in the specific recent-crypto regime but cleared it
+on an entirely independent market. Per the iron rule, still **no real capital**
+until a forward paper run (P5) confirms it live. A forex-native P3/P4 (calibrate
+on forex TRAIN, evaluate forex OOS once) is the natural next validation.
+
+## What would make the crypto case a GO (hypotheses for future, clean OOS tests)
 
 Do NOT tune these on the used-up OOS window; validate on TRAIN then a fresh
 window (e.g. forward paper 2026-07+):

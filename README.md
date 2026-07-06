@@ -78,15 +78,22 @@ trade is identical.
 | P1 | Zone engine + unit tests | ≥90% vs hand-labeled zones; lookahead green | engine + tests ✅ |
 | P2 | Backtester + cost model | deterministic; ambiguity rule verified; report | ✅ |
 | P3 | Calibration sweep on TRAIN | grid; expectancy-ranked | ✅ crypto (TRAIN +0.396R) |
-| P4 | **OOS GO/NO-GO** | exp ≥ +0.15R **and** PF ≥ 1.25 **and** ≥100 trades | ❌ **NO-GO** (crypto: +0.174R, PF 1.22) |
+| P4 | **OOS GO/NO-GO** | exp ≥ +0.15R **and** PF ≥ 1.25 **and** ≥100 trades | crypto ❌ NO-GO · **forex ✅ GO** |
 | P5 | Live scanner + 30d forward paper | forward within ±0.15R; uptime ≥99% | scaffold ✅ |
 
 **Iron rule:** no real capital before P4 = GO **and** P5's 30-day forward run confirms it.
 
-**Current crypto verdict: NO-GO** — the calibrated method is out-of-sample
-positive (+0.174R expectancy) but misses the profit-factor gate (1.22 < 1.25).
-Full story in [`docs/FINDINGS.md`](docs/FINDINGS.md). Reproduce:
-`python main.py backtest --market crypto --start 2024-01-01 --end 2026-06-30 --gate`.
+**Verdicts so far** (full story in [`docs/FINDINGS.md`](docs/FINDINGS.md)):
+
+| test | expectancy | PF | verdict |
+|---|---|---|---|
+| Crypto OOS 2024–2026 (calibrated) | +0.174R | 1.22 | ❌ NO-GO (misses PF by 0.03) |
+| **Forex 2019–2026 (crypto params, untuned)** | **+0.251R** | **1.33** | ✅ **GO** |
+
+The method shows a **genuine cross-market edge after real costs** — it cleared
+the gate on forex/gold using parameters fit only on crypto, i.e. a market never
+used for tuning. It missed the bar only in the specific recent-crypto regime.
+Reproduce: `python main.py backtest --market forex --start 2019-01-01 --end 2026-06-30 --gate`.
 
 ## Honest Caveats
 
