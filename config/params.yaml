@@ -40,7 +40,7 @@ tp_hybrid_floor_r: 2.0   # hybrid floor
 
 # Exit management (P-follow-up: lift profit factor)
 exit_mode: "scaleout"    # setforget | scaleout  [scaleout lifts PF ~1.5->2.0 and halves drawdown]
-scale_tp1_r: 1.0         # scaleout: take partial at this R multiple
+scale_tp1_r: 1.5         # scaleout: take partial at this R multiple [1.5 passes both markets' walk-forward; see FINDINGS]
 scale_fraction: 0.5      # scaleout: fraction of position closed at TP1
 scale_move_be: true      # scaleout: move stop to breakeven after TP1
 

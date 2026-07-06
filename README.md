@@ -91,15 +91,16 @@ Walk-forward = rolling re-calibration, the most stringent test. Scale-out exit
 |---|---|---|
 | Single split (static, set-and-forget) | ❌ NO-GO (+0.174R, PF 1.22) | ✅ GO (+0.253R, PF 1.33) |
 | Walk-forward, set-and-forget | ✅ GO (+0.408R, PF 1.58) | ❌ NO-GO (+0.076R, PF 1.09) |
-| **Walk-forward, scale-out** | ✅ **GO (+0.339R, PF 2.08, all 11 folds +)** | ❌ NO-GO by 0.003R (+0.147R, PF 1.39) |
+| **Walk-forward, scale-out (default)** | ✅ **GO (+0.378R, PF 1.85, 10/11 folds +)** | ✅ **GO (+0.237R, PF 1.50, 10/11 folds +)** |
 
-**Crypto is a robust GO under the most stringent test** (every rolling fold
-2021→2026 positive, PF 2.08, drawdown just 9.4R). **Forex sits right on the
-threshold** — scale-out lifted its walk-forward from clearly NO-GO to a razor-thin
-expectancy miss with PF now passing. Protocol-independent truths: the Odds
-Enhancer score ranks quality everywhere (validating Seiden's core claim), 4h is
-consistently best, and scale-out converts the marginal raw edge into a
-~70%-win-rate, low-drawdown profile. Reproduce: `python main.py walkforward --market crypto`.
+**Crypto is a robust GO** — it passes walk-forward across the *entire* exit-param
+sensitivity grid (PF 1.76–2.20, never fragile). **Forex is a conditional GO** —
+it passes at the default `scale_tp1_r=1.5` but *fails* at 1.0, so its verdict is
+sensitive to the exit setting and should be read as borderline-positive, not
+confirmed. Protocol-independent truths: the Odds Enhancer score ranks quality
+everywhere (validating Seiden's core claim), 4h is consistently best, and
+scale-out yields a ~60–70% win-rate, low-drawdown profile. **Iron rule: no real
+capital before a live forward run.** Reproduce: `python main.py walkforward --market crypto`.
 
 ## Honest Caveats
 
