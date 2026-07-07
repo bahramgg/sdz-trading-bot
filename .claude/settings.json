@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-/home/user/sdz-trading-bot}\" && python3 -c 'import numpy,pandas,ccxt,yaml' 2>/dev/null || pip install -q -r requirements.txt >/dev/null 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
+}
